@@ -13,16 +13,41 @@ const firebaseConfig = {
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+
+
+
+
   
   export const getLeaderboard = async () => {
-    const leaderboardRef = collection(db, "quizResults");
-    const q = query(leaderboardRef, orderBy("score", "desc"), orderBy("totalTime", "asc"));
-    const querySnapshot = await getDocs(q);
+      try {
+        const querySnapshot = await getDocs(collection(db,"quizResults"));
     
-    const leaderboard = [];
-    querySnapshot.forEach((doc) => {
-      leaderboard.push(doc.data());
-    });
-  
-    return leaderboard;
+        let documents = [];
+    
+        querySnapshot.forEach((doc) => {
+          documents.push({ id: doc.id, ...doc.data() });
+        });
+        
+        documents.sort((a, b) => {
+
+          if (a["score"] > b["score"]) return -1;
+          if (a["score"] < b["score"]) return 1;
+        
+
+          const dateA = new Date(a["time"]);
+          const dateB = new Date(b["time"]);
+        
+          if (dateA < dateB) return -1;
+          if (dateA > dateB) return 1;
+        
+          return 0; 
+        });
+        
+        return documents;
+        console.log("All Documents:", documents);
+        return documents;
+      } catch (error) {
+        console.error("Error fetching documents:", error);
+      }
+
   };
